@@ -297,21 +297,6 @@
             transition: color 0.5s ease;
         }
 
-        .connection-status {
-            text-align: center;
-            font-size: 0.9em;
-            color: #b8b8d1;
-            margin-top: 10px;
-        }
-
-        .connection-status.connected {
-            color: #4ade80;
-        }
-
-        .connection-status.disconnected {
-            color: #f87171;
-        }
-
         .stats-container {
             display: flex;
             justify-content: space-around;
@@ -452,10 +437,7 @@
         <div class="live-status-container">
             <div class="status-header">
                 <span class="status-icon" id="statusIcon">🔴</span>
-                <h2 class="status-text" id="statusText">กำลังเชื่อมต่อ...</h2>
-            </div>
-            <div class="connection-status" id="connectionStatus">
-                🔄 กำลังเชื่อมต่อกับเซิร์ฟเวอร์...
+                <h2 class="status-text" id="statusText">Shinso Hitoshi | ยังไม่ไลฟ์... 🔴</h2>
             </div>
             <div class="stats-container" id="statsContainer" style="display: none;">
                 <div class="stat-card">
@@ -483,11 +465,13 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000';
+        // ใช้ URL ของ Render หรือ localhost
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : window.location.origin;
         const TIKTOK_USERNAME = 'snowball_iak';
         
         let socket;
-        let isConnected = false;
 
         function connectWebSocket() {
             socket = io(API_URL, {
@@ -498,15 +482,11 @@
             });
 
             socket.on('connect', () => {
-                isConnected = true;
                 console.log('✅ เชื่อมต่อ WebSocket สำเร็จ');
-                updateConnectionStatus(true);
             });
 
             socket.on('disconnect', () => {
-                isConnected = false;
                 console.log('❌ ตัดการเชื่อมต่อ WebSocket');
-                updateConnectionStatus(false);
             });
 
             socket.on('liveStatus', (data) => {
@@ -516,20 +496,7 @@
 
             socket.on('connect_error', (error) => {
                 console.error('❌ เกิดข้อผิดพลาดในการเชื่อมต่อ:', error);
-                updateConnectionStatus(false);
             });
-        }
-
-        function updateConnectionStatus(connected) {
-            const connectionStatus = document.getElementById('connectionStatus');
-            
-            if (connected) {
-                connectionStatus.textContent = '✅ เชื่อมต่อเซิร์ฟเวอร์สำเร็จ';
-                connectionStatus.className = 'connection-status connected';
-            } else {
-                connectionStatus.textContent = '❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้';
-                connectionStatus.className = 'connection-status disconnected';
-            }
         }
 
         function updateLiveStatus(data) {
@@ -538,6 +505,7 @@
             const statsContainer = document.getElementById('statsContainer');
             const lastUpdate = document.getElementById('lastUpdate');
             
+            // อัพเดทเวลาปัจจุบัน
             const now = new Date().toLocaleTimeString('th-TH');
             lastUpdate.textContent = `อัพเดทล่าสุด: ${now}`;
             
@@ -567,7 +535,7 @@
                 document.getElementById('duration').textContent = durationText;
                 
             } else {
-                statusText.textContent = `${TIKTOK_USERNAME} | ยังไม่ไลฟ์... 🔴`;
+                statusText.textContent = `Shinso Hitoshi | ยังไม่ไลฟ์... 🔴`;
                 statusIcon.textContent = '🔴';
                 statusText.style.color = '#f87171';
                 statsContainer.style.display = 'none';
@@ -587,6 +555,7 @@
             }
         }
 
+        // Mouse tracking effects
         const container = document.getElementById('container');
         
         container.addEventListener('mousemove', (e) => {
@@ -621,13 +590,14 @@
             logo.style.transform = 'scale(1) rotate(0deg)';
         });
 
+        // เริ่มต้น
         connectWebSocket();
         
-        setInterval(() => {
-            if (!isConnected) {
-                fetchLiveStatus();
-            }
-        }, 30000);
+        // ดึงข้อมูลทุก 30 วินาที
+        setInterval(fetchLiveStatus, 30000);
+        
+        // ดึงข้อมูลครั้งแรกทันที
+        fetchLiveStatus();
     </script>
 </body>
 </html>
